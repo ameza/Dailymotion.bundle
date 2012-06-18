@@ -1,0 +1,121 @@
+BASEURL="http://www.dailymotion.com"
+DM_QUERY = "/%ssearch/%s/1"
+FF="true"
+INLISTING=Regex("\/([0-9]+)$")
+
+
+####################################################################################################
+# We add a default query string purely so that it is easier to be tested by the automated channel tester
+def Search(query = "pug"):
+  url = DM_QUERY % ("relevance/",String.Quote(query, usePlus = True))
+  return GetVideoList(url)
+
+
+##############################################################################
+def BuildURL(url):
+
+	# Let's default to us first off
+	CCODE = "us"
+	try:
+		page_request = HTTP.Request("http://www.dailymotion.com", follow_redirects = False)
+		page = page_request.content
+	except Ex.RedirectError, e:
+		if e.headers.has_key('Location'):
+			redirect_url = e.headers['Location']
+			# eg. /ca-en or /us
+			CCODE=redirect_url.split('/')[1]
+
+	
+	# sometimes we get passed url's without our CCODE, which ends up causing issues, 
+	# so if it's missing, prepend it
+	if url.split("/")[1] != CCODE:
+		url = "/" + CCODE + url
+
+	# check our family filter setting and if required build an appropriate URL to turn if off
+	# best to do it this way as their cookies can be unreliable for this purpose, site redirects to 
+	# appropriate url after it's disabled
+	if FF == "false":
+		url= "/family_filter?urlback="+String.URLEncode(url)+"&enable=false"
+
+	return url
+
+
+
+##############################################################################
+def GetVideoList(url):
+	oc = ObjectContainer()
+	page = HTML.ElementFromURL(BASEURL + BuildURL(url))
+ 	pageData = HTML.StringFromElement(page)
+ 	Log(pageData)
+
+	# this is a standard listing page
+	data = page.xpath('id("dual_list")//div[contains(@class,"dmpi_video_item")]')
+	for video in data:	
+		try:
+			title = video.xpath('./h3/a[contains(@class,"video_title")]/text()')[0]
+			url = video.xpath('./h3/a[contains(@class,"video_title")]/@href')[0]
+			if not url[:7] == "/video/":
+				# currently unparsable data such as a custom content player page, let's skip in this case
+				continue
+			# try for biggest/best thumbnail possible (_source) but fallback to _large and/or _medium,
+			# they are not all that consistent but they should all have medium (that's what the site uses in layout)
+			thumb_urls = []
+			try:
+				thumb_urls.append(video.xpath('.//img[@class="dmco_image"]/@data-src')[0].replace('_medium','_source'))
+				thumb_urls.append(video.xpath('.//img[@class="dmco_image"]/@data-src')[0].replace('_medium','_large'))
+				thumb_urls.append(video.xpath('.//img[@class="dmco_image"]/@data-src')[0])
+			except:
+				thumbs = []
+				
+			try:
+				summary = video.xpath('.//div[@class="dmpi_video_description foreground"]/text()')[0]
+			except:
+				summary = ""
+
+			
+			duration = int(GetDurationFromString(video.xpath('.//div[contains(@class, "duration")]/text()')[0]))
+
+			
+			# calculate rating
+			# max 80px wide, 80px=5/5, 0px=0/5
+			# set as style="width:80px" 
+			# Plex is rating out of 10, therefore /8
+			rWidth = int(video.xpath('.//div[@class="rating"]/@style')[0].replace('width:','').replace('px',''))
+			rating = round(rWidth/8)
+
+# 			url = url.split('?')[0]
+
+
+			oc.add(
+				VideoClipObject(
+					url = BASEURL + url,
+					title = title, 
+					summary = summary, 
+					duration = duration,
+					rating=rating,  
+					thumb = Resource.ContentsOfURLWithFallback(url=thumb_urls, fallback='icon-default.png')
+				)
+			)
+		except:
+			# sometimes they leave empty div containers, skip these
+			Log("Gerk: Error! -- " + BASEURL + url)
+			Log("Gerk: title: %s",title)
+			Log("Gerk: summary: %s",summary)
+			Log("Gerk: duration: %s",duration)
+			Log("Gerk: rating: %s" % (rating))
+			continue
+	return oc
+
+##############################################################################
+def GetDurationFromString(duration):
+	seconds = 0
+	try:
+		duration = duration.split(':')
+		duration.reverse()
+		
+		for i in range(0, len(duration)):
+			seconds += int(duration[i]) * (60**i)
+	except:
+		pass
+	
+	return seconds * 1000
