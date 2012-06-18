@@ -83,8 +83,6 @@ def GetVideoList(url):
 			rWidth = int(video.xpath('.//div[@class="rating"]/@style')[0].replace('width:','').replace('px',''))
 			rating = round(rWidth/8)
 
-# 			url = url.split('?')[0]
-
 
 			oc.add(
 				VideoClipObject(
