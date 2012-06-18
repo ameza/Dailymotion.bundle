@@ -13,7 +13,7 @@ DM_QUERY = "/%ssearch/%s/1"
 # web site defaults to the filter being active, and so does this plugin
 # in the future if parental control is enabled this can be adjusted, leaving
 # this code in for reference
-FF="true"
+FF=True
 
 ##############################################################################
 def Start():
@@ -96,8 +96,9 @@ def GetChannels():
 	for channel in data:
 		url = channel.xpath('./@href')[0]
 		title = channel.xpath('./text()')[0]
-		if title == "3D Videos":
-			# these are a dedicated custom content page that's not worth parsing!
+		if title in ["3D Videos", "Sexy"]:
+			# 3D Videos = a dedicated custom content page that's not worth parsing!
+			# Sexy = mostly soft, but xxx content
 			continue
 
 		oc.add(DirectoryObject(key=Callback(ShowChoices, url=url), title=title))
@@ -386,7 +387,7 @@ def BuildURL(url):
 	# check our family filter setting and if required build an appropriate URL to turn if off
 	# best to do it this way as their cookies can be unreliable for this purpose, site redirects to 
 	# appropriate url after it's disabled
-	if FF == "false":
+	if FF == False:
 		url= "/family_filter?urlback="+String.URLEncode(url)+"&enable=false"
 
 	return url

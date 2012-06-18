@@ -1,6 +1,6 @@
 BASEURL="http://www.dailymotion.com"
 DM_QUERY = "/%ssearch/%s/1"
-FF="true"
+FF=True
 INLISTING=Regex("\/([0-9]+)$")
 
 
@@ -34,7 +34,7 @@ def BuildURL(url):
 	# check our family filter setting and if required build an appropriate URL to turn if off
 	# best to do it this way as their cookies can be unreliable for this purpose, site redirects to 
 	# appropriate url after it's disabled
-	if FF == "false":
+	if FF == False:
 		url= "/family_filter?urlback="+String.URLEncode(url)+"&enable=false"
 
 	return url
