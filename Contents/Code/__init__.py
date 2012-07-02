@@ -381,6 +381,8 @@ def BuildURL(url):
 	
 	# sometimes we get passed url's without our CCODE, which ends up causing issues, 
 	# so if it's missing, prepend it
+	# NB: for some international users this can cause issues, need to reproduce to figure out
+	# proper work around.  Likely we need to check it first split is a known language prefix -- Gerk, June 28, 2012
 	if url.split("/")[1] != Dict['CCODE']:
 		url = "/" + Dict['CCODE'] + url
 
