@@ -63,7 +63,7 @@ def MainMenu():
 	oc.add(DirectoryObject(key=Callback(GetVideoList,url="/" + Dict['CCODE']), title="Featured Videos"))
 
 	# What's Hot? / Popular items
-	whatsHotURL=HTML.ElementFromURL(BASEURL + "/" + Dict['CCODE']).xpath('//a[@title="more popular videos"]/@href')[0].split('#')[0]
+	whatsHotURL=HTML.ElementFromURL(BASEURL + "/" + Dict['CCODE']).xpath('//div[@class="dmpi_list_buzz"]/div[@class="dmpi_box right_title"]/a/@href')[0].split('#')[0]
 	oc.add(DirectoryObject(key=Callback(GetVideoList,url=whatsHotURL), title="Popular Videos"))
 
 	# latest videos
