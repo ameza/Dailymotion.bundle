@@ -63,7 +63,7 @@ def MainMenu():
 	oc.add(DirectoryObject(key=Callback(GetVideoList,url="/" + Dict['CCODE']), title="Featured Videos"))
 
 	# What's Hot? / Popular items
-	whatsHotURL=HTML.ElementFromURL(BASEURL + "/" + Dict['CCODE']).xpath('//a[@title="more popular videos"]/@href')[0].split('#')[0]
+	whatsHotURL=HTML.ElementFromURL(BASEURL + "/" + Dict['CCODE']).xpath('//div[@class="dmpi_list_buzz"]//div[contains(@class,"dmco_box right_title")]/a/@href')[0].split('#')[0]
 	oc.add(DirectoryObject(key=Callback(GetVideoList,url=whatsHotURL), title="Popular Videos"))
 
 	# latest videos
@@ -381,6 +381,8 @@ def BuildURL(url):
 	
 	# sometimes we get passed url's without our CCODE, which ends up causing issues, 
 	# so if it's missing, prepend it
+	# NB: for some international users this can cause issues, need to reproduce to figure out
+	# proper work around.  Likely we need to check it first split is a known language prefix -- Gerk, June 28, 2012
 	if url.split("/")[1] != Dict['CCODE']:
 		url = "/" + Dict['CCODE'] + url
 
