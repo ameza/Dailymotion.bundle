@@ -224,17 +224,19 @@ def GetVideoList(url):
 		# and it's slightly different than standard features pages :(
 		
 		# first is the top area
-		# they provide the top info in JSON format for their Carosel Player
-		# and our HTML GET doesn't execute the Carosel so we can't get it via xpath, 
-		# so let's use the JSON data the provide
+		# they provide the top info in JSON format for their Carousel Player
+		# and our HTML GET doesn't execute the Carousel so we can't get it via xpath, 
+		# so let's use the JSON data they provide
 
 		pageData = HTML.StringFromElement(page)
 		topData = JSON.ObjectFromString(pageData.split('DM_Widget_PageItem_Video_Carousel.slideList = ')[1].strip().split('DM_Widget_PageItem_Video_Carousel.initialize')[0][:-1])
-		
+
 		for item in topData:
 			try:
 				title = item['videoTitle']
 				url = item['videoUrl']
+				if not url.startswith('http'):
+				    url = BASE_URL + url
 				summary = item['videoDescription']
 				duration = GetDurationFromString(item['videoDuration'])
 				thumb_urls = []
