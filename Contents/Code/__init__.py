@@ -60,7 +60,9 @@ def MainMenu():
 def GetVideoList(path="videos", filters="", sort="recent", limit=25, page=1, title2="Videos", search=""):
 	oc = ObjectContainer(title2=title2)
 	fields="title,description,thumbnail_large_url,rating,url,duration,created_time,views_total"
-	fullURL = "https://api.dailymotion.com/%s?sort=%s&filters=%s&limit=%i&page=%i&fields=%s&search=%s" % (path, sort, filters, limit, page, fields, search)
+	fullURL = "https://api.dailymotion.com/%s?sort=%s&filters=%s&limit=%i&page=%i&fields=%s" % (path, sort, filters, limit, page, fields)
+	if search!="":
+		fullURL = "%s&search=%s" % (fullURL, search) # only add search if applicable, API doesn't like a NULL search request
 	data = JSON.ObjectFromURL(fullURL)
 	for video in data['list']:
 		title = video['title']
