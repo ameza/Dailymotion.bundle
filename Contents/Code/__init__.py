@@ -1,10 +1,9 @@
-NAME = 'Dailymotion'
-ART = 'art-default.jpg'
-ICON = 'icon-default.png'
+NAME='Dailymotion'
+ICON='icon-default.png'
+ART='art-default.jpg'
 
 ##############################################################################
 def Start():
-	Plugin.AddPrefixHandler("/video/dailymotion", MainMenu, NAME, ICON, ART)
 
 	Plugin.AddViewGroup("InfoList", viewMode="InfoList", mediaType="items")
 	Plugin.AddViewGroup("List", viewMode="List", mediaType="items")
@@ -28,6 +27,7 @@ def Start():
 
 
 ##############################################################################
+@handler('/video/dailymotion', NAME, art=ART, thumb=ICON)
 def MainMenu():
 	oc = ObjectContainer()
 
@@ -55,8 +55,9 @@ def MainMenu():
 
 	return oc
 
-	
+
 ##############################################################################
+@route("/video/dailymotion/getvideolist")
 def GetVideoList(path="videos", filters="", sort="recent", limit=25, page=1, title2="Videos", search=""):
 	oc = ObjectContainer(title2=title2)
 	fields="title,description,thumbnail_large_url,rating,url,duration,created_time,views_total"
@@ -115,6 +116,7 @@ def GetVideoList(path="videos", filters="", sort="recent", limit=25, page=1, tit
 
 
 ##############################################################################
+@route("/video/dailymotion/getchannels")
 def GetChannels():
 	
 	oc = ObjectContainer()
@@ -129,7 +131,7 @@ def GetChannels():
 			
 	return oc
 
-
+@route("/video/dailymotion/showchannelchoices")
 ##############################################################################
 def ShowChannelChoices(channel):
 	oc = ObjectContainer()
@@ -202,10 +204,12 @@ def ShowChannelChoices(channel):
 
 ####################################################################################################
 # We add a default query string purely so that it is easier to be tested by the automated channel tester
+@route("/video/dailymotion/search")
 def Search(query = "pug", stype="relevance"):
 	return GetVideoList(sort=stype, search=String.Quote(query, usePlus = True))
 	
 ####################################################################################################
+@route("/video/dailymotion/searchoptions")
 def SearchOptions():
 	# search videos
 	oc = ObjectContainer()
