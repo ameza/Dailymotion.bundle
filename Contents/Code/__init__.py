@@ -36,7 +36,7 @@ def MainMenu():
 
 	oc.add(DirectoryObject(key=Callback(GetVideoList, path="videos", filters="featured", sort="recent", title2="Featured Videos"), title="Featured Videos"))
 	oc.add(DirectoryObject(key=Callback(GetVideoList, path="videos", filters="buzz", sort="recent", title2="Popular Videos"), title="Popular Videos"))
-	oc.add(DirectoryObject(key=Callback(GetVideoList, path="videos", filters="", sort="recent", title2="Latest Videos"), title="Latest Videos"))
+	oc.add(DirectoryObject(key=Callback(GetVideoList, path="videos", sort="recent", title2="Latest Videos"), title="Latest Videos"))
 
 	# search videos
 	oc.add(DirectoryObject(key=Callback(SearchOptions), title="Search Videos"))	
@@ -204,7 +204,6 @@ def ShowChannelChoices(channel):
 
 ####################################################################################################
 # We add a default query string purely so that it is easier to be tested by the automated channel tester
-@route("/video/dailymotion/search")
 def Search(query = "pug", stype="relevance"):
 	return GetVideoList(sort=stype, search=String.Quote(query, usePlus = True))
 	
