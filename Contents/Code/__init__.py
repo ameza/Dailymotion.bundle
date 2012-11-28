@@ -131,8 +131,8 @@ def GetChannels():
 			
 	return oc
 
-@route("/video/dailymotion/showchannelchoices")
 ##############################################################################
+@route("/video/dailymotion/showchannelchoices")
 def ShowChannelChoices(channel):
 	oc = ObjectContainer()
 
