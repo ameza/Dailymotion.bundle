@@ -12,14 +12,12 @@ def Start():
 	ObjectContainer.title1 = NAME
 	ObjectContainer.view_group = 'List'
 	ObjectContainer.art = R(ART)
-	
+
 	# Setup the default attributes for the other objects
 	DirectoryObject.thumb = R(ICON)
 	DirectoryObject.art = R(ART)
 	VideoClipObject.thumb = R(ICON)
-	VideoClipObject.art = R(ART)
-	EpisodeObject.thumb = R(ICON)
-	EpisodeObject.art = R(ART)
+	NextPageObject.thumb = R(ICON)
 
 	# Setup some basic things the plugin needs to know about
 	# we probably don't want to use cache otherwise some things will give bad results (like popular today and the like)
@@ -29,6 +27,7 @@ def Start():
 ##############################################################################
 @handler('/video/dailymotion', NAME, art=ART, thumb=ICON)
 def MainMenu():
+
 	oc = ObjectContainer()
 
 	# main video channel listings
@@ -46,7 +45,7 @@ def MainMenu():
 	oc.add(DirectoryObject(key=Callback(GetVideoList, sort="visited-today", title2="Most Viewed Videos - Today"), title="Most Viewed Videos - Today"))
 	oc.add(DirectoryObject(key=Callback(GetVideoList, sort="visited-week", title2="Most Viewed Videos - This Week"), title="Most Viewed Videos - This Week"))
 	oc.add(DirectoryObject(key=Callback(GetVideoList, sort="visited-month", title2="Most Viewed Videos - This Month"), title="Most Viewed Videos - This Month"))
-	
+
 	# best rated (note: rated-today doesn't work)
 	oc.add(DirectoryObject(key=Callback(GetVideoList, sort="rated", title2="Best Rated Videos - All Time"), title="Best Rated Videos - All Time"))
 	oc.add(DirectoryObject(key=Callback(GetVideoList, sort="rated-today", title2="Best Rated Videos - Today"), title="Best Rated Videos - Today"))
@@ -59,12 +58,15 @@ def MainMenu():
 ##############################################################################
 @route("/video/dailymotion/getvideolist")
 def GetVideoList(path="videos", filters="", sort="recent", limit=25, page=1, title2="Videos", search=""):
+
 	oc = ObjectContainer(title2=title2)
 	fields="title,description,thumbnail_large_url,rating,url,duration,created_time,views_total"
-	fullURL = "https://api.dailymotion.com/%s?sort=%s&filters=%s&limit=%i&page=%i&fields=%s" % (path, sort, filters, limit, page, fields)
+	full_url = "https://api.dailymotion.com/%s?sort=%s&filters=%s&limit=%i&page=%i&fields=%s" % (path, sort, filters, limit, page, fields)
+
 	if search!="":
-		fullURL = "%s&search=%s" % (fullURL, search) # only add search if applicable, API doesn't like a NULL search request
-	data = JSON.ObjectFromURL(fullURL)
+		full_url = "%s&search=%s" % (full_url, search) # only add search if applicable, API doesn't like a NULL search request
+	data = JSON.ObjectFromURL(full_url)
+
 	for video in data['list']:
 		title = video['title']
 		url = video['url']
@@ -84,17 +86,17 @@ def GetVideoList(path="videos", filters="", sort="recent", limit=25, page=1, tit
 			thumb_url = video['thumbnail_large_url']
 		except:
 			thumb_url = ""
-		
+
 		try:
 			rating = float(video['rating']*2)
 		except:
 			rating = float(0)
-			
+
 		try:
 			originally_available_at = Datetime.FromTimestamp(video['created_time'])
 		except:
 			originally_available_at = Datetime.Now()
-			
+
 		oc.add(
 			VideoClipObject(
 				title=title, 
@@ -106,21 +108,20 @@ def GetVideoList(path="videos", filters="", sort="recent", limit=25, page=1, tit
 				thumb=Resource.ContentsOfURLWithFallback(url=thumb_url, fallback=ICON)
 			)
 		)
-	
+
 	# pagination
 	if data['has_more']:
-		oc.add(NextPageObject(key=Callback(GetVideoList, sort=sort, filters=filters, limit=limit, page=page+1, title2=title2), title="Next Page of Results"))
-		
-	
+		oc.add(NextPageObject(key=Callback(GetVideoList, sort=sort, filters=filters, limit=limit, page=page+1, title2=title2), title="More..."))
+
 	return oc
 
 
 ##############################################################################
 @route("/video/dailymotion/getchannels")
 def GetChannels():
-	
+
 	oc = ObjectContainer()
-	
+
 	# will leave sort=alpha in here in case it works in the future, but right now it seems like a bug in their api, it still returns popular and not alpha no matter what you choose
 	data = JSON.ObjectFromURL("https://api.dailymotion.com/channels?sort=alpha")
 	for channel in data['list']:
@@ -128,12 +129,13 @@ def GetChannels():
 
 	# sort here until they resolve that bug
 	oc.objects.sort(key = lambda obj: obj.title)
-			
+
 	return oc
 
-@route("/video/dailymotion/showchannelchoices")
 ##############################################################################
+@route("/video/dailymotion/showchannelchoices")
 def ShowChannelChoices(channel):
+
 	oc = ObjectContainer()
 
 	oc.add (
@@ -201,16 +203,17 @@ def ShowChannelChoices(channel):
 	return oc
 
 
-
 ####################################################################################################
 # We add a default query string purely so that it is easier to be tested by the automated channel tester
 @route("/video/dailymotion/search")
 def Search(query = "pug", stype="relevance"):
-	return GetVideoList(sort=stype, search=String.Quote(query, usePlus = True))
-	
+
+	return GetVideoList(sort=stype, search=String.Quote(query, usePlus=True))
+
 ####################################################################################################
 @route("/video/dailymotion/searchoptions")
 def SearchOptions():
+
 	# search videos
 	oc = ObjectContainer()
 	oc.add(InputDirectoryObject(key = Callback(Search, stype="relevance"), title = 'By Relevance', prompt = 'Search Videos'))	
