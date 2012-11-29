@@ -35,7 +35,7 @@ def MainMenu():
 
 	oc.add(DirectoryObject(key=Callback(GetVideoList, path="videos", filters="featured", sort="recent", title2="Featured Videos"), title="Featured Videos"))
 	oc.add(DirectoryObject(key=Callback(GetVideoList, path="videos", filters="buzz", sort="recent", title2="Popular Videos"), title="Popular Videos"))
-	oc.add(DirectoryObject(key=Callback(GetVideoList, path="videos", filters="", sort="recent", title2="Latest Videos"), title="Latest Videos"))
+	oc.add(DirectoryObject(key=Callback(GetVideoList, path="videos", sort="recent", title2="Latest Videos"), title="Latest Videos"))
 
 	# search videos
 	oc.add(DirectoryObject(key=Callback(SearchOptions), title="Search Videos"))	
