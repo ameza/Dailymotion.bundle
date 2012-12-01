@@ -1,18 +1,26 @@
-ICON='icon-default.png'
+ART = 'art-default.jpg'
+ICON = 'icon-default.png'
 
 ####################################################################################################
 # We add a default query string purely so that it is easier to be tested by the automated channel tester
-def Search(query = "pug", stype="relevance"):
-	return GetVideoList(sort=stype, search=String.Quote(query, usePlus = True))
+def Search(query="pug", stype="relevance"):
 
+	return GetVideoList(sort=stype, search=String.Quote(query, usePlus=True))
 
-def GetVideoList(path="videos", filters="", sort="recent", limit=25, page=1, title2="Videos", search=""):
-	oc = ObjectContainer(title2=title2)
-	fields="title,description,thumbnail_large_url,rating,url,duration,created_time,views_total"
-	fullURL = "https://api.dailymotion.com/%s?sort=%s&filters=%s&limit=%i&page=%i&fields=%s" % (path, sort, filters, limit, page, fields)
-	if search!="":
-		fullURL = "%s&search=%s" % (fullURL, search) # only add search if applicable, API doesn't like a NULL search request
-	data = JSON.ObjectFromURL(fullURL)
+####################################################################################################
+def GetVideoList(path="videos", filters="", sort="recent", limit=25, page=1, search=""):
+
+	oc = ObjectContainer(title1='Dailymotion', title2='Search Results', art=R(ART))
+
+	if search == "":
+		return oc
+	else:
+		fields = "title,description,thumbnail_large_url,rating,url,duration,created_time,views_total"
+		full_url = "https://api.dailymotion.com/%s?sort=%s&filters=%s&limit=%i&page=%i&fields=%s" % (path, sort, filters, limit, page, fields)
+		full_url = "%s&search=%s" % (full_url, search) # only add search if applicable, API doesn't like a NULL search request
+
+	data = JSON.ObjectFromURL(full_url)
+
 	for video in data['list']:
 		title = video['title']
 		url = video['url']
@@ -32,32 +40,27 @@ def GetVideoList(path="videos", filters="", sort="recent", limit=25, page=1, tit
 			thumb_url = video['thumbnail_large_url']
 		except:
 			thumb_url = ""
-		
+
 		try:
 			rating = float(video['rating']*2)
 		except:
 			rating = float(0)
-			
+
 		try:
-			originally_available_at = Datetime.FromTimestamp(video['created_time'])
+			originally_available_at = Datetime.FromTimestamp(video['created_time']).date()
 		except:
-			originally_available_at = Datetime.Now()
-			
+			originally_available_at = None
+
 		oc.add(
 			VideoClipObject(
-				title=title, 
-				summary=summary,
-				url=url,
-				duration=duration,
-				rating=rating,
-				originally_available_at=originally_available_at, 
-				thumb=Resource.ContentsOfURLWithFallback(url=thumb_url, fallback=ICON)
+				title = title,
+				summary = summary,
+				url = url,
+				duration = duration,
+				rating = rating,
+				originally_available_at = originally_available_at,
+				thumb = Resource.ContentsOfURLWithFallback(url=thumb_url, fallback=ICON)
 			)
 		)
-	
-	# pagination
-	if data['has_more']:
-		oc.add(NextPageObject(key=Callback(GetVideoList, sort=sort, filters=filters, limit=limit, page=page+1, title2=title2), title="Next Page of Results"))
-		
-	
+
 	return oc

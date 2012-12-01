@@ -20,8 +20,7 @@ def Start():
 	NextPageObject.thumb = R(ICON)
 
 	# Setup some basic things the plugin needs to know about
-	# we probably don't want to use cache otherwise some things will give bad results (like popular today and the like)
-	# HTTP.CacheTime = CACHE_1HOUR
+	HTTP.CacheTime = 1800
 
 
 ##############################################################################
@@ -56,7 +55,7 @@ def MainMenu():
 
 
 ##############################################################################
-@route("/video/dailymotion/getvideolist")
+@route("/video/dailymotion/getvideolist", limit=int, page=int)
 def GetVideoList(path="videos", filters="", sort="recent", limit=25, page=1, title2="Videos", search=""):
 
 	oc = ObjectContainer(title2=title2)
@@ -144,7 +143,6 @@ def ShowChannelChoices(channel):
 			title="Featured Videos"
 		)
 	)
-
 	oc.add(
 		DirectoryObject(
 			key=Callback(GetVideoList, path="channel/"+channel+"/videos", sort="recent", title2="Latest Videos"), 
