@@ -1,8 +1,9 @@
-NAME='Dailymotion'
-ICON='icon-default.png'
-ART='art-default.jpg'
+NAME = 'Dailymotion'
+ICON = 'icon-default.png'
+ART = 'art-default.jpg'
+FF = 1 # Family Filter, we default to 1 (meaning it is enabled)
 
-##############################################################################
+####################################################################################################
 def Start():
 
 	Plugin.AddViewGroup("InfoList", viewMode="InfoList", mediaType="items")
@@ -22,8 +23,7 @@ def Start():
 	# Setup some basic things the plugin needs to know about
 	HTTP.CacheTime = 1800
 
-
-##############################################################################
+####################################################################################################
 @handler('/video/dailymotion', NAME, art=ART, thumb=ICON)
 def MainMenu():
 
@@ -53,17 +53,22 @@ def MainMenu():
 
 	return oc
 
-
-##############################################################################
+####################################################################################################
 @route("/video/dailymotion/getvideolist", limit=int, page=int)
-def GetVideoList(path="videos", filters="", sort="recent", limit=25, page=1, title2="Videos", search=""):
+def GetVideoList(path="videos", filters=None, sort="recent", limit=25, page=1, title2="Videos", search=None):
 
 	oc = ObjectContainer(title2=title2)
-	fields="title,description,thumbnail_large_url,rating,url,duration,created_time,views_total"
-	full_url = "https://api.dailymotion.com/%s?sort=%s&filters=%s&limit=%i&page=%i&fields=%s" % (path, sort, filters, limit, page, fields)
 
-	if search!="":
+	# Callbacks turn "" into None, which we don't want -- use None and revert it to "" as required
+	if filters == None:
+		filters = ""
+
+	fields = "title,description,thumbnail_large_url,rating,url,duration,created_time,views_total"
+	full_url = "https://api.dailymotion.com/%s?sort=%s&filters=%s&limit=%i&page=%i&fields=%s&family_filter=%i" % (path, sort, filters, limit, page, fields, FF)
+
+	if search != None:
 		full_url = "%s&search=%s" % (full_url, search) # only add search if applicable, API doesn't like a NULL search request
+
 	data = JSON.ObjectFromURL(full_url)
 
 	for video in data['list']:
@@ -72,14 +77,15 @@ def GetVideoList(path="videos", filters="", sort="recent", limit=25, page=1, tit
 		duration = video['duration']*1000 # worst case duration is 0 so we get 0
 
 		try:
-			views = video["views_total"]
+			views = "\n\nViews: %i" % video["views_total"]
 		except:
-			views = 0	
+			views = ""
 
 		try:
-			summary = String.StripTags(video['description'].replace("<br />","\n")) + "\n\nViews: %i" % views
+			summary = String.StripTags(video['description'].replace("<br />", "\n")) + views
+			summary = summary.strip()
 		except:
-			summary = ""
+			summary = None
 
 		try:
 			thumb_url = video['thumbnail_large_url']
@@ -89,40 +95,39 @@ def GetVideoList(path="videos", filters="", sort="recent", limit=25, page=1, tit
 		try:
 			rating = float(video['rating']*2)
 		except:
-			rating = float(0)
+			rating = None
 
 		try:
 			originally_available_at = Datetime.FromTimestamp(video['created_time'])
 		except:
-			originally_available_at = Datetime.Now()
+			originally_available_at = None
 
 		oc.add(
 			VideoClipObject(
-				title=title, 
-				summary=summary,
-				url=url,
-				duration=duration,
-				rating=rating,
-				originally_available_at=originally_available_at, 
-				thumb=Resource.ContentsOfURLWithFallback(url=thumb_url, fallback=ICON)
+				url = url,
+				title = title,
+				summary = summary,
+				duration = duration,
+				rating = rating,
+				originally_available_at = originally_available_at,
+				thumb = Resource.ContentsOfURLWithFallback(url=thumb_url, fallback=ICON)
 			)
 		)
 
 	# pagination
 	if data['has_more']:
-		oc.add(NextPageObject(key=Callback(GetVideoList, sort=sort, filters=filters, limit=limit, page=page+1, title2=title2), title="More..."))
+		oc.add(NextPageObject(key=Callback(GetVideoList, path=path, filters=filters, sort=sort, limit=limit, page=int(page+1), title2=title2, search=search), title="More..."))
 
 	return oc
 
-
-##############################################################################
+####################################################################################################
 @route("/video/dailymotion/getchannels")
 def GetChannels():
 
 	oc = ObjectContainer()
 
 	# will leave sort=alpha in here in case it works in the future, but right now it seems like a bug in their api, it still returns popular and not alpha no matter what you choose
-	data = JSON.ObjectFromURL("https://api.dailymotion.com/channels?sort=alpha")
+	data = JSON.ObjectFromURL("https://api.dailymotion.com/channels?sort=alpha&family_filter=%i" % FF)
 	for channel in data['list']:
 		oc.add(DirectoryObject(key=Callback(ShowChannelChoices, channel=channel['id']), title=channel['name'], summary=channel['description']))
 
@@ -131,7 +136,7 @@ def GetChannels():
 
 	return oc
 
-##############################################################################
+####################################################################################################
 @route("/video/dailymotion/showchannelchoices")
 def ShowChannelChoices(channel):
 
@@ -199,7 +204,6 @@ def ShowChannelChoices(channel):
 	)
 
 	return oc
-
 
 ####################################################################################################
 # We add a default query string purely so that it is easier to be tested by the automated channel tester
