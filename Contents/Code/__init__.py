@@ -1,5 +1,5 @@
 NAME = 'Dailymotion'
-ICON = 'icon-default.png'
+ICON = 'icon-default.jpg'
 ART = 'art-default.jpg'
 FF = 1 # Family Filter, we default to 1 (meaning it is enabled)
 

@@ -1,4 +1,4 @@
-ICON = 'icon-default.png'
+ICON = 'icon-default.jpg'
 
 ####################################################################################################
 # We add a default query string purely so that it is easier to be tested by the automated channel tester
